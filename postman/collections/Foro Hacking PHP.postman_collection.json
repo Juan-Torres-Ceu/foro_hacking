@@ -1,0 +1,114 @@
+{
+  "info": {
+    "_postman_id": "8578605d-c9f6-49db-b2e9-a7369df0bc22",
+    "name": "Foro Hacking PHP",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Registro usuario",
+      "id": "82aac8f3-396e-49eb-9901-5089ff08ddc7",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "reg_nick",
+              "value": "usuario_test",
+              "type": "text"
+            },
+            {
+              "key": "reg_pass",
+              "value": "123456",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/index.php",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "index.php"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login",
+      "id": "31842d0d-3810-44cc-b0d5-f8c31669f2ee",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "login_nick",
+              "value": "usuario_test",
+              "type": "text"
+            },
+            {
+              "key": "login_pass",
+              "value": "123456",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/index.php",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "index.php"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear mensaje",
+      "id": "250969db-b3b6-48bd-a06e-3311d1bfa329",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "login_nick",
+              "value": "usuario_test",
+              "type": "text"
+            },
+            {
+              "key": "login_pass",
+              "value": "123456",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "http://localhost:8080/index.php",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "index.php"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
