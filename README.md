@@ -44,6 +44,24 @@ En esta versión he añadido autenticación con roles y capacidades de administr
 
 Esta actualización demuestra control de autenticación (identificar al usuario) y de autorización (diferenciar qué puede hacer un admin frente a un usuario normal).
 
+---
+
+## 🧾 Cambios versión 0.2 (tokens por usuario)
+
+En la versión 0.2 he añadido **tokens de seguridad por usuario**:
+
+- Nueva columna `api_token` en la tabla `usuarios`.
+- En el registro de usuarios se genera un token aleatorio con `random_bytes` +
+  `bin2hex` y se guarda en `usuarios.api_token`.
+- Cada usuario tiene un identificador secreto único que podría usarse en el
+  futuro para exponer una API segura o reforzar ciertas operaciones.
+- El token se puede consultar desde la base de datos y, opcionalmente, mostrar
+  en la interfaz solo al usuario autenticado.
+- El flujo principal de autenticación sigue siendo usuario + contraseña
+  (con PEPPER + `password_hash`), pero ahora la aplicación está preparada
+  para trabajar también con tokens por usuario.
+
+---
 
 ## 🚀 Puesta en producción con Docker
 

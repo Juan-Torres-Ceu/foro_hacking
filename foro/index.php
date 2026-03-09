@@ -12,6 +12,11 @@ if ($conexion->connect_error) {
 }
 
 $PEPPER = "pon_aqui_un_pepper_secreto_y_largo";
+
+function generarTokenApi($longitud = 32) {
+    return bin2hex(random_bytes($longitud));
+}
+
 $pantalla = isset($_GET['pantalla']) ? $_GET['pantalla'] : 'login';
 
 // BORRADO DE MENSAJES (solo admin)
@@ -34,20 +39,32 @@ if (isset($_GET['delete_id']) && isset($_SESSION['rol']) && $_SESSION['rol'] ===
 if (isset($_POST['reg_nick']) && isset($_POST['reg_pass'])) {
     $nick = $conexion->real_escape_string($_POST['reg_nick']);
     $pass = $_POST['reg_pass'];
-    $peppered = hash_hmac("sha256", $pass, $PEPPER);
+
+    // Hash seguro con pepper
+    $peppered  = hash_hmac("sha256", $pass, $PEPPER);
     $pass_hash = password_hash($peppered, PASSWORD_DEFAULT);
 
+    // Generar token API para este usuario
+    $api_token = generarTokenApi(32);
+
+    // Comprobar si el nick ya existe
     $exists = $conexion->query("SELECT id FROM usuarios WHERE nick='$nick'");
     if ($exists && $exists->num_rows) {
-        $error = "Ese usuario ya existe.";
+        $error    = "Ese usuario ya existe.";
         $pantalla = 'register';
     } else {
-        $conexion->query("INSERT INTO usuarios (nick, password, rol) VALUES ('$nick', '$pass_hash', 'user')");
+        // Crear usuario normal con rol 'user' y api_token
+        $sql = "
+            INSERT INTO usuarios (nick, password, rol, api_token)
+            VALUES ('$nick', '$pass_hash', 'user', '$api_token')
+        ";
+        $conexion->query($sql);
+
         if ($conexion->error) {
-            $error = "Error al registrar usuario: " . $conexion->error;
+            $error    = "Error al registrar usuario: " . $conexion->error;
             $pantalla = 'register';
         } else {
-            $success = "Usuario registrado. Ahora puedes iniciar sesión.";
+            $success  = "Usuario registrado. Ahora puedes iniciar sesión.";
             $pantalla = 'login';
         }
     }
