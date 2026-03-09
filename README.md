@@ -20,6 +20,31 @@ Esta separación en servicios (web y BD) reduce la superficie de ataque y sigue 
 
 ---
 
+## 🧾 Cambios versión 0.1 (roles)
+
+En esta versión he añadido autenticación con roles y capacidades de administración:
+
+- Nueva columna `rol` en la tabla `usuarios` (`admin` / `user`).
+- El proceso de login ahora guarda en la sesión:
+  - `$_SESSION['usuario_id']`
+  - `$_SESSION['nick']`
+  - `$_SESSION['rol']`
+- Interfaz diferenciada según el rol:
+  - Los usuarios con rol **admin** ven:
+    - Fondo distinto en la aplicación.
+    - Título “Foro Hacking (Administrador)” y badge **ADMIN** junto a su nombre.
+  - Los usuarios normales ven el foro con el estilo estándar.
+- Autorización a nivel de interfaz:
+  - Solo los usuarios con rol **admin** ven el botón **Borrar** en cada mensaje.
+  - Al pulsar “Borrar” se elimina el mensaje de la tabla `mensajes`
+    y también el archivo asociado en la carpeta `uploads/` si existe.
+- Se mantiene el almacenamiento seguro de contraseñas:
+  - PEPPER con `hash_hmac("sha256", $pass, $PEPPER)`.
+  - Hash con `password_hash` y verificación con `password_verify`.
+
+Esta actualización demuestra control de autenticación (identificar al usuario) y de autorización (diferenciar qué puede hacer un admin frente a un usuario normal).
+
+
 ## 🚀 Puesta en producción con Docker
 
 ### Requisitos previos
