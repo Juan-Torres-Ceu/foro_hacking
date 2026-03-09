@@ -5,13 +5,29 @@ ini_set('display_errors', 1);
 
 header("Content-Security-Policy: default-src 'self' https://cdn.tailwindcss.com https://fonts.googleapis.com https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;");
 
-$PEPPER = "pon_aqui_un_pepper_secreto_y_largo";
-$pantalla = isset($_GET['pantalla']) ? $_GET['pantalla'] : 'login';
-
-// CONEXIÓN BD (igual que en mensajes.php)
+// Conexión BD
 $conexion = new mysqli('db', 'foro', 'foro', 'db');
 if ($conexion->connect_error) {
     die("Error de conexión: " . $conexion->connect_error);
+}
+
+$PEPPER = "pon_aqui_un_pepper_secreto_y_largo";
+$pantalla = isset($_GET['pantalla']) ? $_GET['pantalla'] : 'login';
+
+// BORRADO DE MENSAJES (solo admin)
+if (isset($_GET['delete_id']) && isset($_SESSION['rol']) && $_SESSION['rol'] === 'admin') {
+    $id = (int)$_GET['delete_id'];
+
+    $res = $conexion->query("SELECT archivo FROM mensajes WHERE id = $id");
+    if ($res && $res->num_rows) {
+        $row = $res->fetch_assoc();
+        if (!empty($row['archivo']) && file_exists($row['archivo'])) {
+            @unlink($row['archivo']);
+        }
+    }
+    $conexion->query("DELETE FROM mensajes WHERE id = $id");
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
 }
 
 // REGISTRO
@@ -26,7 +42,7 @@ if (isset($_POST['reg_nick']) && isset($_POST['reg_pass'])) {
         $error = "Ese usuario ya existe.";
         $pantalla = 'register';
     } else {
-        $conexion->query("INSERT INTO usuarios (nick, password) VALUES ('$nick', '$pass_hash')");
+        $conexion->query("INSERT INTO usuarios (nick, password, rol) VALUES ('$nick', '$pass_hash', 'user')");
         if ($conexion->error) {
             $error = "Error al registrar usuario: " . $conexion->error;
             $pantalla = 'register';
@@ -42,13 +58,14 @@ if (isset($_POST['login_nick']) && isset($_POST['login_pass'])) {
     $nick = $conexion->real_escape_string($_POST['login_nick']);
     $pass = $_POST['login_pass'];
 
-    $res = $conexion->query("SELECT id, password FROM usuarios WHERE nick='$nick'");
+    $res = $conexion->query("SELECT id, password, rol FROM usuarios WHERE nick='$nick'");
     if ($res && $res->num_rows) {
         $user = $res->fetch_assoc();
         $peppered = hash_hmac("sha256", $pass, $PEPPER);
         if (password_verify($peppered, $user['password'])) {
             $_SESSION['usuario_id'] = $user['id'];
-            $_SESSION['nick'] = $nick;
+            $_SESSION['nick']       = $nick;
+            $_SESSION['rol']        = $user['rol'];
             header("Location: " . $_SERVER['PHP_SELF']);
             exit();
         } else {
@@ -71,12 +88,12 @@ if (isset($_POST['msg']) && isset($_SESSION['usuario_id'])) {
     $usuario_id = (int)$_SESSION['usuario_id'];
     $msg = $conexion->real_escape_string($_POST['msg']);
     $nombre_archivo = null;
-    $tipo_archivo = null;
+    $tipo_archivo   = null;
 
     if (isset($_FILES['archivo']) && $_FILES['archivo']['error'] == UPLOAD_ERR_OK) {
-        $tmp = $_FILES['archivo']['tmp_name'];
+        $tmp      = $_FILES['archivo']['tmp_name'];
         $original = basename($_FILES['archivo']['name']);
-        $ext = strtolower(pathinfo($original, PATHINFO_EXTENSION));
+        $ext      = strtolower(pathinfo($original, PATHINFO_EXTENSION));
         $permitidos = ['jpg','jpeg','png','gif','mp4','webm','mov'];
 
         if (in_array($ext, $permitidos)) {
@@ -84,24 +101,38 @@ if (isset($_POST['msg']) && isset($_SESSION['usuario_id'])) {
             $destino = "uploads/" . uniqid() . "_" . preg_replace('/[^a-zA-Z0-9_.-]/', '', $original);
             move_uploaded_file($tmp, $destino);
             $nombre_archivo = $destino;
-            $tipo_archivo = (in_array($ext, ['mp4','webm','mov'])) ? "video" : "imagen";
+            $tipo_archivo   = in_array($ext, ['mp4','webm','mov']) ? "video" : "imagen";
         }
     }
 
     $sql = "INSERT INTO mensajes (usuario_id, mensaje, archivo, tipo) VALUES ($usuario_id, '$msg', " .
-        ($nombre_archivo ? "'$nombre_archivo'" : "NULL") . ", " .
-        ($tipo_archivo ? "'$tipo_archivo'" : "NULL") . ")";
+           ($nombre_archivo ? "'$nombre_archivo'" : "NULL") . ", " .
+           ($tipo_archivo   ? "'$tipo_archivo'"   : "NULL") . ")";
     $conexion->query($sql);
 
     header("Location: " . $_SERVER['PHP_SELF']);
     exit();
+}
+
+// clase de fondo distinta para admin
+$bodyClass = "bg-[#0b0b0c]";
+if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'admin') {
+    $bodyClass = "bg-red-950";
 }
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Foro Hacking</title>
+  <title>
+    <?php
+      if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'admin') {
+          echo "Foro Hacking - ADMIN";
+      } else {
+          echo "Foro Hacking";
+      }
+    ?>
+  </title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
@@ -113,11 +144,17 @@ if (isset($_POST['msg']) && isset($_SESSION['usuario_id'])) {
     }
   </style>
 </head>
-<body class="bg-[#0b0b0c] text-gray-200 min-h-screen">
+<body class="<?php echo $bodyClass; ?> text-gray-200 min-h-screen">
 <div class="max-w-lg mx-auto py-12 px-4">
   <h1 class="text-center text-4xl font-extrabold mb-10 tracking-tight
              bg-gradient-to-r from-indigo-400 to-fuchsia-500 bg-clip-text text-transparent select-none">
-    Foro Hacking
+    <?php
+      if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'admin') {
+          echo "Foro Hacking (Administrador)";
+      } else {
+          echo "Foro Hacking";
+      }
+    ?>
   </h1>
 
   <?php if (!isset($_SESSION['usuario_id'])): ?>
@@ -168,7 +205,13 @@ if (isset($_POST['msg']) && isset($_SESSION['usuario_id'])) {
   <?php else: ?>
     <div class="glass flex justify-between items-center px-4 py-2 mb-6 rounded-md border border-white/10">
       <span class="text-gray-300">
-        Bienvenido <span class="text-indigo-400 font-semibold"><?php echo htmlspecialchars($_SESSION['nick']); ?></span>
+        Bienvenido
+        <span class="text-indigo-400 font-semibold">
+          <?php echo htmlspecialchars($_SESSION['nick']); ?>
+        </span>
+        <?php if ($_SESSION['rol'] === 'admin'): ?>
+          <span class="ml-2 px-2 py-1 text-xs rounded bg-red-600 text-white font-bold">ADMIN</span>
+        <?php endif; ?>
       </span>
       <a href="?logout=1" class="text-fuchsia-300 hover:text-fuchsia-100 font-semibold">Salir</a>
     </div>
@@ -210,7 +253,7 @@ function cargarMensajes() {
           audio.play().catch(() => {});
 
           if ("Notification" in window && Notification.permission === "granted") {
-            const nick = primerMensaje.querySelector('.font-semibold').textContent;
+            const nick  = primerMensaje.querySelector('.font-semibold').textContent;
             const texto = primerMensaje.querySelector('.leading-relaxed').textContent.substring(0, 50);
 
             new Notification('💀 Nuevo mensaje en Foro Hacking', {
