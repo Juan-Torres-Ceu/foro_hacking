@@ -93,48 +93,45 @@ errores introducidos por cambios de código (OWASP Top 10 – *Security Misconfi
 
 ---
 
-## 🛡️ Medidas de seguridad y relación con OWASP Top 10
+## 🛡️ Relación con OWASP Top 10
 
-La aplicación incorpora varias medidas concretas relacionadas con OWASP Top 10. [web:265][web:295]
+Este proyecto aplica controles relacionados con varias categorías del
+OWASP Top 10:2021. Referencia oficial: OWASP Top 10:2021. [web:302][web:313]
 
-- **Gestión de autenticación y contraseñas**
-  - Uso de PEPPER + `hash_hmac` + `password_hash` + `password_verify` para
-    almacenar contraseñas de forma robusta.
-  - Protección frente a *Identification and Authentication Failures*
-    (OWASP Top 10). [web:265]
+### A01:2021 – Broken Access Control
 
-- **Control de acceso por roles**
-  - Rol `admin` con permisos adicionales (borrado de mensajes) frente a rol `user`.
-  - Comprobaciones de rol antes de permitir acciones sensibles.
-  - Reducción del riesgo de *Broken Access Control* al separar claramente
-    capacidades de usuario y administrador. [web:265]
+- Uso de roles `admin` / `user` almacenados en la tabla `usuarios`.
+- Comprobación del rol antes de permitir acciones sensibles (por ejemplo,
+  borrar mensajes).
+- Botones y funcionalidades de administración visibles solo para usuarios
+  con rol adecuado.
 
-- **Protección frente a XSS**
-  - Salida escapada con funciones tipo `htmlspecialchars` + `nl2br` en los
-    mensajes mostrados.
-  - Evita la ejecución de HTML/JavaScript insertado por usuarios y mitiga
-    *Cross-Site Scripting (XSS)*. [web:265]
+### A02:2021 – Cryptographic Failures
 
-- **Protección CSRF**
-  - Uso de token CSRF por sesión, incluido en formularios sensibles y
-    validado en cada petición POST.
-  - Reduce el riesgo de ataques de falsificación de petición en sitios
-    cruzados, relacionados con *Broken Access Control* e *Identification and
-    Authentication Failures*. [web:265]
+- Contraseñas protegidas con PEPPER + `hash_hmac("sha256", password, PEPPER)`
+  + `password_hash(...)`.
+- Verificación de contraseñas con `password_verify`, evitando almacenamiento
+  en texto claro.
+- Generación de tokens aleatorios por usuario con `random_bytes` + `bin2hex`.
 
-- **Validación de subida de archivos**
-  - Lista blanca de extensiones permitidas (imágenes / vídeos).
-  - Comprobación de tipo MIME real y límite de tamaño.
-  - Nombres de archivo aleatorios y almacenados fuera del código fuente.
-  - Mitiga riesgos de *Security Misconfiguration* y de exposición de datos
-    a través de archivos maliciosos. [web:260][web:265]
+### A03:2021 – Injection
 
-- **Aislamiento con Docker**
-  - Separación en servicios `web` y `db`.
-  - Persistencia de datos controlada mediante volúmenes.
-  - Facilita aplicar principios de mínimo privilegio y mitigar impacto de
-    vulnerabilidades, alineado con *Security Misconfiguration* y *Vulnerable
-    and Outdated Components* (al poder actualizar imágenes de forma controlada). [web:289][web:295]
+- Uso de consultas preparadas (`prepare` + `bind_param`) en las operaciones
+  de inserción de mensajes y gestión de usuarios en la versión segura del
+  código.
+
+### A05:2021 – Security Misconfiguration
+
+- Despliegue en Docker con separación de servicios (`web` y `db`).
+- Configuración explícita de puertos y volúmenes en `docker-compose.yml`.
+- Restricción de tipos de archivo y tamaños máximos en subidas.
+
+### A07:2021 – Identification and Authentication Failures
+
+- Sistema de login con usuario + contraseña y sesión PHP.
+- Gestión de sesión mediante `$_SESSION['usuario_id']`, `$_SESSION['nick']`
+  y `$_SESSION['rol']`.
+- Tokens de API por usuario preparados para reforzar futuras operaciones.
 
 ---
 
