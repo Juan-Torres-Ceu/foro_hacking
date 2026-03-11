@@ -20,4 +20,4 @@ jobs:
           php-version: '8.2'
 
       - name: Run manual unit tests script
-        run: php /foro_hacking/foro/pruebas_unitarias.php
+        run: php foro/pruebas_unitarias.php
