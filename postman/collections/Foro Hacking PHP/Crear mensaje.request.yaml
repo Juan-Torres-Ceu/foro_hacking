@@ -1,0 +1,9 @@
+$kind: http-request
+url: http://localhost:8080/index.php
+method: POST
+body:
+  type: urlencoded
+  content:
+    login_nick: usuario_test
+    login_pass: "123456"
+order: 3000

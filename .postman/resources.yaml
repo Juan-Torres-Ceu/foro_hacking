@@ -1,0 +1,14 @@
+# Use this workspace to collaborate
+workspace:
+  id: 1c3c363a-b66b-4831-8ef7-ed86617604d6
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+cloudResources:
+  collections:
+    ..\postman\collections\Foro Hacking PHP: 41196003-8578605d-c9f6-49db-b2e9-a7369df0bc22
+
+# All resources in the `postman/` folder are automatically registered in Local View.
+# Point to additional files outside the `postman/` folder to register them individually. Example:
+#localResources:
+#  collections:
+#    - ../tests/E2E Test Collection/
